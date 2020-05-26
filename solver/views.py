@@ -85,23 +85,28 @@ def paint_location(nparray, pos_xy, new_value):
     fill_area(img, curr_value, new_value, col, row)
 
 
-def fill_area(img, area_color, new_color, col, row):
+def fill_area(img, area_color, new_color, start_col, start_row):
     """
-    Fill area of one color with another color. This function
-    calls itself recursively.
+    Fill area of one color with another color.
     """
-    max_col, max_row, _ = img.shape
-    # Base case: stop at edges of image
-    if col < 0 or row < 0 or col >= max_col or row >= max_row:
-        return
+    # Follows approach similar to recursion, but with iteration and our own stack
+    stack = [(start_col, start_row)]
+    while len(stack) != 0:
+        col, row = stack.pop()
 
-    curr_eq = img[col, row] == area_color
-    new_eq = img[col, row] == new_color
-    # Base case: stop if not the same color, or already the new color
-    if not curr_eq.all() or new_eq.all():
-        return
-    img[col, row] = new_color
-    fill_area(img, area_color, new_color, col - 1, row)
-    fill_area(img, area_color, new_color, col + 1, row)
-    fill_area(img, area_color, new_color, col, row - 1)
-    fill_area(img, area_color, new_color, col, row + 1)
+        max_col, max_row, _ = img.shape
+        # Base case: stop at edges of image
+        if col < 0 or row < 0 or col >= max_col or row >= max_row:
+            continue
+
+        curr_eq = img[col, row] == area_color
+        new_eq = img[col, row] == new_color
+        # Base case: stop if not the same color, or already the new color
+        if not curr_eq.all() or new_eq.all():
+            continue
+
+        img[col, row] = new_color
+        stack.append((col - 1, row))
+        stack.append((col + 1, row))
+        stack.append((col, row - 1))
+        stack.append((col, row + 1))
