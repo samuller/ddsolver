@@ -2,6 +2,8 @@ import os, glob
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
+import numpy as np
+
 curr_dir = None
 curr_img = None
 curr_idx = 0
@@ -38,6 +40,9 @@ def main_image(request):
 
     import imageio
     im = imageio.imread(curr_dir + curr_img)
+    # Convert to RGB if grayscale
+    if len(im.shape) == 2:
+        im = np.stack((im, im, im), axis=-1)
 
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :], format="png")
