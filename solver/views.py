@@ -54,13 +54,15 @@ def main_image(request):
     return response
 
 def prev_image(request):
-    global curr_idx
+    global curr_idx, curr_xy
     curr_idx = curr_idx - 1
+    curr_xy = None
     return HttpResponseRedirect('/')
 
 def next_image(request):
-    global curr_idx
+    global curr_idx, curr_xy
     curr_idx = curr_idx + 1
+    curr_xy = None
     return HttpResponseRedirect('/')
 
 def select_xy(request):
