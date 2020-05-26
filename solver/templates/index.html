@@ -24,5 +24,33 @@
 
 <img src="/image.png">
 
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
+<script>
+$(".main_img").click ( function (evt) {
+    // Source: https://stackoverflow.com/questions/6854220/get-the-part-of-an-image-where-the-user-clicked
+    var elem = $(this);
+    var offsetFromParent = elem.position();
+    var topThickness = (elem.outerHeight(true) - elem.height() ) / 2;
+    var leftThickness = (elem.outerWidth (true) - elem.width () ) / 2;
+
+    // (x,y) coordinates of the mouse click relative to the image.
+    var x_pos = evt.pageX - offsetFromParent.left - leftThickness;
+    var y_pos = evt.pageY - offsetFromParent.top  - topThickness;
+
+    // send location to backend
+    $.ajax({
+        url : "/select_xy",
+        type: "POST",
+        data : {x: x_pos, y: y_pos, csrfmiddlewaretoken: window.CSRF_TOKEN},
+        success: function(data, textStatus, jqXHR) {
+            //data - response from server
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.log(`${textStatus}: ${errorThrown} (${jqXHR.status})`);
+        }
+    });
+} );
+</script>
 </body>
 </html>

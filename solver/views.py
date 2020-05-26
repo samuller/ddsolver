@@ -7,6 +7,7 @@ import numpy as np
 curr_dir = None
 curr_img = None
 curr_idx = 0
+curr_xy = None
 
 
 # Create your views here.
@@ -58,3 +59,11 @@ def next_image(request):
     curr_idx = curr_idx + 1
     return HttpResponseRedirect('/')
 
+def select_xy(request):
+    global curr_xy
+    if request.method == 'POST':
+        x_pos = int(request.POST.get('x'))
+        y_pos = int(request.POST.get('y'))
+        curr_xy = (x_pos, y_pos)
+    print(curr_xy)
+    return HttpResponseRedirect('/')
