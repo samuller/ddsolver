@@ -11,21 +11,18 @@
 
 <form action="/" method="get">
     <label for="path_name">Path: </label>
-    <input id="path_name" type="text" name="pathname" value="/mnt/c">
-    <input type="submit" value="OK">
-</form>
-
-<img src="/image.png">
-
-<div>
-    <button onclick="location.href='/prev_img'" type="button">
+    <input id="path_name" type="text" name="pathname" value="{{ curr_dir | default:'/mnt/c' }}">
+    <input type="submit" value="Change path">
+        <button onclick="location.href='/prev_img'" type="button">
          Prev
     </button>
     <span>{{ curr_idx }} / {{ image_count }}</span>
     <button onclick="location.href='/next_img'" type="button">
          Next
     </button>
-</div>
+</form>
+
+<img src="/image.png">
 
 </body>
 </html>
