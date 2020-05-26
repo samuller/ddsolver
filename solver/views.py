@@ -34,6 +34,7 @@ def main_page(request):
                'curr_idx': curr_idx + 1, 'image_count': image_count}
     return render(request, 'index.html', context)
 
+
 def main_image(request):
     global curr_dir, curr_xy
     if curr_dir is None or not os.path.exists(curr_dir + curr_img):
@@ -53,17 +54,20 @@ def main_image(request):
     imageio.imwrite(response, im[:, :, :], format="png")
     return response
 
+
 def prev_image(request):
     global curr_idx, curr_xy
     curr_idx = curr_idx - 1
     curr_xy = None
     return HttpResponseRedirect('/')
 
+
 def next_image(request):
     global curr_idx, curr_xy
     curr_idx = curr_idx + 1
     curr_xy = None
     return HttpResponseRedirect('/')
+
 
 def select_xy(request):
     global curr_xy
@@ -73,11 +77,13 @@ def select_xy(request):
         curr_xy = (x_pos, y_pos)
     return HttpResponseRedirect('/')
 
+
 def paint_location(nparray, pos_xy, new_value):
     row, col = pos_xy
     img = nparray
     curr_value = np.copy(img[col, row])
     fill_area(img, curr_value, new_value, col, row)
+
 
 def fill_area(img, area_color, new_color, col, row):
     """
