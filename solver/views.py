@@ -35,7 +35,7 @@ def main_page(request):
     return render(request, 'index.html', context)
 
 def main_image(request):
-    global curr_dir
+    global curr_dir, curr_xy
     if curr_dir is None or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
 
@@ -45,8 +45,12 @@ def main_image(request):
     if len(im.shape) == 2:
         im = np.stack((im, im, im), axis=-1)
 
+    if curr_xy is not None:
+        # Color selected area red
+        paint_location(im, curr_xy, [255, 0, 0])
+
     response = HttpResponse(content_type="image/png")
-    imageio.imwrite(response, im[:, :], format="png")
+    imageio.imwrite(response, im[:, :, :], format="png")
     return response
 
 def prev_image(request):
@@ -65,5 +69,26 @@ def select_xy(request):
         x_pos = int(request.POST.get('x'))
         y_pos = int(request.POST.get('y'))
         curr_xy = (x_pos, y_pos)
-    print(curr_xy)
     return HttpResponseRedirect('/')
+
+def paint_location(nparray, pos_xy, new_value):
+    row, col = pos_xy
+    img = nparray
+    curr_value = np.copy(img[col, row])
+    fill_area(img, curr_value, new_value, col, row)
+
+def fill_area(img, area_color, new_color, col, row):
+    """
+    Fill area of one color with another color. This function
+    calls itself recursively.
+    """
+    curr_eq = img[col, row] == area_color
+    new_eq = img[col, row] == new_color
+    # Base case: stop if not the same color, or already the new color
+    if not curr_eq.all() or new_eq.all():
+        return
+    img[col, row] = new_color
+    fill_area(img, area_color, new_color, col - 1, row)
+    fill_area(img, area_color, new_color, col + 1, row)
+    fill_area(img, area_color, new_color, col, row - 1)
+    fill_area(img, area_color, new_color, col, row + 1)
