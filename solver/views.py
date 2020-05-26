@@ -17,12 +17,18 @@ def main_page(request):
             curr_idx = 0
         curr_dir = pathname
 
+    image_count = 0
     if curr_dir is not None:
         images = glob.glob(curr_dir + '*.gif')
+        images.extend(glob.glob(curr_dir + '*.jpg'))
         images = sorted([os.path.basename(img) for img in images])
+        image_count = len(images)
+        if curr_idx >= image_count or curr_idx < 0:
+            curr_idx = curr_idx % image_count
         curr_img = images[curr_idx]
 
-    context = {curr_dir: curr_dir, curr_img: curr_img}
+    context = {'curr_dir': curr_dir, 'curr_img': curr_img,
+               'curr_idx': curr_idx + 1, 'image_count': image_count}
     return render(request, 'index.html', context)
 
 def main_image(request):
