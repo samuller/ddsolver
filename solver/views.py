@@ -90,6 +90,11 @@ def fill_area(img, area_color, new_color, col, row):
     Fill area of one color with another color. This function
     calls itself recursively.
     """
+    max_col, max_row, _ = img.shape
+    # Base case: stop at edges of image
+    if col < 0 or row < 0 or col >= max_col or row >= max_row:
+        return
+
     curr_eq = img[col, row] == area_color
     new_eq = img[col, row] == new_color
     # Base case: stop if not the same color, or already the new color
