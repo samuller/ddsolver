@@ -10,6 +10,8 @@ curr_dir = None
 curr_img = None
 curr_idx = 0
 curr_xy = None
+# Integer scaling only
+curr_scale = 4
 
 image_extensions = ['gif', 'jpg', 'png']
 
@@ -44,7 +46,7 @@ def main_page(request):
 
 
 def main_image(request):
-    global curr_dir, curr_xy
+    global curr_dir, curr_xy, curr_scale
     if is_empty_or_none(curr_dir) or is_empty_or_none(curr_img) or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
     # Load current image
@@ -70,6 +72,7 @@ def main_image(request):
         selected_label = labelled[col, row, 0]
         im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
+    im = resize_larger(im, curr_scale)
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :, :], format="png")
     return response
@@ -90,16 +93,28 @@ def next_image(request):
 
 
 def select_xy(request):
-    global curr_xy
+    global curr_xy, curr_scale
     if request.method == 'POST':
         x_pos = int(request.POST.get('x'))
         y_pos = int(request.POST.get('y'))
-        curr_xy = (x_pos, y_pos)
+        # Assume integer up-scaling only
+        curr_xy = (int(x_pos / curr_scale), int(y_pos / curr_scale))
     return HttpResponseRedirect('/')
 
 
 def is_empty_or_none(str_value):
     return str_value is None or len(str_value) == 0
+
+
+def resize_larger(im, scale=2):
+    assert scale == int(scale)
+    return np.repeat(np.repeat(im, scale, axis=0), scale, axis=1)
+
+
+def resize_smaller(im, scale=2):
+    assert scale == int(scale)
+    import skimage.transform
+    return skimage.transform.downscale_local_mean(im, (scale, scale))
 
 
 def paint_location(nparray, pos_xy, new_value):
