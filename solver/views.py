@@ -15,6 +15,7 @@ curr_scale = 4
 
 image_extensions = ['gif', 'jpg', 'png']
 
+
 # Create your views here.
 def main_page(request):
     global curr_dir, curr_img, curr_idx, curr_scale
@@ -67,7 +68,12 @@ def main_image(request):
     if len(im.shape) == 2:
         im = np.stack((im, im, im), axis=-1)
         labelled = np.stack((labelled, labelled, labelled), axis=-1)
-    # Color selected area red
+
+    # Randomly color each region
+    # import random
+    # for i in range(region_count):
+    #     color = [int(random.random() * 255), int(random.random() * 255), int(random.random() * 255)]
+    #     im = np.where(labelled == i, color, im).astype(np.uint8)
 
     # Color selected area and similar areas
     if curr_xy is not None:
@@ -129,5 +135,6 @@ def resize_smaller(im, scale=2):
 
 
 def get_label_region(label_img, label_value):
+    assert len(label_img.shape) == 2
     sel_rows, sel_cols = np.nonzero(label_img == label_value)
     return label_img[min(sel_rows):(max(sel_rows) + 1), min(sel_cols):(max(sel_cols) + 1)]
