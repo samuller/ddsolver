@@ -2,7 +2,9 @@ import os, glob
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
+import imageio
 import numpy as np
+from scipy.ndimage import label
 
 curr_dir = None
 curr_img = None
@@ -39,16 +41,28 @@ def main_image(request):
     global curr_dir, curr_xy
     if curr_dir is None or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
-
-    import imageio
+    # Load current image
     im = imageio.imread(curr_dir + curr_img)
+
+    im_to_label = im
+    # Change zeroes to ones
+    im_to_label = np.where(im_to_label == 0, 1, im_to_label)
+    # and 255s to zero
+    im_to_label = np.where(im_to_label == 255, 0, im_to_label)
+    # 4-connectivity structure
+    conn = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
+    # component labelling of each region (separated by zeros)
+    labelled, region_count = label(im_to_label, conn)
+
     # Convert to RGB if grayscale
     if len(im.shape) == 2:
         im = np.stack((im, im, im), axis=-1)
-
+        labelled = np.stack((labelled, labelled, labelled), axis=-1)
+    # Color selected area red
     if curr_xy is not None:
-        # Color selected area red
-        paint_location(im, curr_xy, [255, 0, 0])
+        row, col = curr_xy
+        selected_label = labelled[col, row, 0]
+        im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :, :], format="png")

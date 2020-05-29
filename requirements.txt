@@ -1,2 +1,3 @@
 django
 imageio
+scipy
