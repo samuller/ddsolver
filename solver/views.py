@@ -131,37 +131,3 @@ def resize_smaller(im, scale=2):
 def get_label_region(label_img, label_value):
     sel_rows, sel_cols = np.nonzero(label_img == label_value)
     return label_img[min(sel_rows):(max(sel_rows) + 1), min(sel_cols):(max(sel_cols) + 1)]
-
-
-def paint_location(nparray, pos_xy, new_value):
-    row, col = pos_xy
-    img = nparray
-    curr_value = np.copy(img[col, row])
-    fill_area(img, curr_value, new_value, col, row)
-
-
-def fill_area(img, area_color, new_color, start_col, start_row):
-    """
-    Fill area of one color with another color.
-    """
-    # Follows approach similar to recursion, but with iteration and our own stack
-    stack = [(start_col, start_row)]
-    while len(stack) != 0:
-        col, row = stack.pop()
-
-        max_col, max_row, _ = img.shape
-        # Base case: stop at edges of image
-        if col < 0 or row < 0 or col >= max_col or row >= max_row:
-            continue
-
-        curr_eq = img[col, row] == area_color
-        new_eq = img[col, row] == new_color
-        # Base case: stop if not the same color, or already the new color
-        if not curr_eq.all() or new_eq.all():
-            continue
-
-        img[col, row] = new_color
-        stack.append((col - 1, row))
-        stack.append((col + 1, row))
-        stack.append((col, row - 1))
-        stack.append((col, row + 1))
