@@ -11,26 +11,32 @@ curr_img = None
 curr_idx = 0
 curr_xy = None
 
+image_extensions = ['gif', 'jpg', 'png']
 
 # Create your views here.
 def main_page(request):
     global curr_dir, curr_img, curr_idx
     pathname = request.GET.get('pathname', None)
 
-    if pathname is not None:
+    if not is_empty_or_none(pathname):
         if pathname != curr_dir:
             curr_idx = 0
         curr_dir = pathname
+        if curr_dir[-1] is not '/':
+            curr_dir += '/'
 
     image_count = 0
-    if curr_dir is not None:
-        images = glob.glob(curr_dir + '*.gif')
-        images.extend(glob.glob(curr_dir + '*.jpg'))
+    if not is_empty_or_none(curr_dir):
+        images = [im for ext in image_extensions for im in glob.glob(curr_dir + '*.' + ext)]
         images = sorted([os.path.basename(img) for img in images])
         image_count = len(images)
-        if curr_idx >= image_count or curr_idx < 0:
-            curr_idx = curr_idx % image_count
-        curr_img = images[curr_idx]
+        if image_count != 0:
+            if curr_idx >= image_count or curr_idx < 0:
+                curr_idx = curr_idx % image_count
+            curr_img = images[curr_idx]
+        else:
+            curr_idx = 0
+            curr_img = None
 
     context = {'curr_dir': curr_dir, 'curr_img': curr_img,
                'curr_idx': curr_idx + 1, 'image_count': image_count}
@@ -39,7 +45,7 @@ def main_page(request):
 
 def main_image(request):
     global curr_dir, curr_xy
-    if curr_dir is None or not os.path.exists(curr_dir + curr_img):
+    if is_empty_or_none(curr_dir) or is_empty_or_none(curr_img) or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
     # Load current image
     im = imageio.imread(curr_dir + curr_img)
@@ -90,6 +96,10 @@ def select_xy(request):
         y_pos = int(request.POST.get('y'))
         curr_xy = (x_pos, y_pos)
     return HttpResponseRedirect('/')
+
+
+def is_empty_or_none(str_value):
+    return str_value is None or len(str_value) == 0
 
 
 def paint_location(nparray, pos_xy, new_value):
