@@ -1,3 +1,4 @@
-django
-imageio
-scipy
+Django==3.0.6
+imageio==2.8.0
+scipy==1.4.1
+scikit-image==0.17.2
