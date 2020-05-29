@@ -17,7 +17,7 @@ image_extensions = ['gif', 'jpg', 'png']
 
 # Create your views here.
 def main_page(request):
-    global curr_dir, curr_img, curr_idx
+    global curr_dir, curr_img, curr_idx, curr_scale
     pathname = request.GET.get('pathname', None)
 
     if not is_empty_or_none(pathname):
@@ -41,7 +41,8 @@ def main_page(request):
             curr_img = None
 
     context = {'curr_dir': curr_dir, 'curr_img': curr_img,
-               'curr_idx': curr_idx + 1, 'image_count': image_count}
+               'curr_idx': curr_idx + 1, 'image_count': image_count,
+               'curr_scale': curr_scale}
     return render(request, 'index.html', context)
 
 
