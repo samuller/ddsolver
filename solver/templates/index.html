@@ -59,6 +59,8 @@ $(".main_img").click ( function (evt) {
     var x_pos = evt.pageX - offsetFromParent.left - leftThickness;
     var y_pos = evt.pageY - offsetFromParent.top  - topThickness;
 
+    x_pos = Math.floor(x_pos);
+    y_pos = Math.floor(y_pos);
     // send location to backend & reload image on success
     api_select_xy(x_pos, y_pos, (d) => reloadImage(elem[0]));
 } );
