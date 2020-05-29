@@ -68,11 +68,21 @@ def main_image(request):
         im = np.stack((im, im, im), axis=-1)
         labelled = np.stack((labelled, labelled, labelled), axis=-1)
     # Color selected area red
+
+    # Color selected area and similar areas
     if curr_xy is not None:
         row, col = curr_xy
         selected_label = labelled[col, row, 0]
+        # Color all identical shapes blue
+        sel_img = get_label_region(labelled[:, :, 0], selected_label)
+        for i in range(region_count):
+            lbl_img = get_label_region(labelled[:, :, 0], i)
+            if np.array_equal(sel_img > 0, lbl_img > 0):
+                im = np.where(labelled == i, [0, 0, 255], im).astype(np.uint8)
+        # Color selected area red
         im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
+    # Resize image
     im = resize_larger(im, curr_scale)
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :, :], format="png")
@@ -116,6 +126,11 @@ def resize_smaller(im, scale=2):
     assert scale == int(scale)
     import skimage.transform
     return skimage.transform.downscale_local_mean(im, (scale, scale))
+
+
+def get_label_region(label_img, label_value):
+    sel_rows, sel_cols = np.nonzero(label_img == label_value)
+    return label_img[min(sel_rows):(max(sel_rows) + 1), min(sel_cols):(max(sel_cols) + 1)]
 
 
 def paint_location(nparray, pos_xy, new_value):
