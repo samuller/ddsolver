@@ -17,8 +17,15 @@ curr_scale = 4
 
 image_extensions = ['gif', 'jpg', 'png']
 
-# rows, cols, before, after
-shape_transforms = (7, 5, '1C9F27C9C', '000E03800')
+shape_transforms = [
+    # rows, cols, before, after
+    (7, 5, '1c9f27c9c', '000e03800'),
+    (7, 5, '109f8fc84', '394a5294e'),
+    (7, 5, '7e1084210', '119c2109f'),
+    # (7, 5, '709485e1c', '30422210e'),
+    (7, 5, '7e1f85e10', '30426084c'),
+    # (7, 5, '5e1c8721c', '08ca53c42'),
+]
 
 
 # Create your views here.
@@ -93,9 +100,11 @@ def main_image(request):
         # Color selected area red
         im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
-    before_arr = hex_str_to_nparr(shape_transforms[2], shape_transforms[0:2])
-    after_arr = hex_str_to_nparr(shape_transforms[3], shape_transforms[0:2])
-    update_matching_shapes(im, labelled, before_arr, after_arr)
+    for transform in shape_transforms:
+        tr_rows, tr_cols, tr_before, tr_after = transform
+        before_arr = hex_str_to_nparr(tr_before, (tr_rows, tr_cols))
+        after_arr = hex_str_to_nparr(tr_after, (tr_rows, tr_cols))
+        update_matching_shapes(im, labelled, before_arr, after_arr)
 
     # Resize image
     im = resize_larger(im, curr_scale)
