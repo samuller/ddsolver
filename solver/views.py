@@ -5,6 +5,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 import imageio
 import numpy as np
 from scipy.ndimage import label
+import bitarray, bitarray.util
+
 
 curr_dir = None
 curr_img = None
@@ -15,23 +17,9 @@ curr_scale = 4
 
 image_extensions = ['gif', 'jpg', 'png']
 
-before = """  ***
-  *  
-*****
-  *  
-*****
-  *  
-***  
-"""
+# rows, cols, before, after
+shape_transforms = (7, 5, '1C9F27C9C', '000E03800')
 
-after = """     
-     
- *** 
-     
- *** 
-     
-     
-"""
 
 # Create your views here.
 def main_page(request):
@@ -105,10 +93,8 @@ def main_image(request):
         # Color selected area red
         im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
-    before_arr = np.array([list(line) for line in before.splitlines()])
-    before_arr = before_arr == '*'
-    after_arr = np.array([list(line) for line in after.splitlines()])
-    after_arr = after_arr == '*'
+    before_arr = hex_str_to_nparr(shape_transforms[2], shape_transforms[0:2])
+    after_arr = hex_str_to_nparr(shape_transforms[3], shape_transforms[0:2])
     update_matching_shapes(im, labelled, before_arr, after_arr)
 
     # Resize image
@@ -206,3 +192,10 @@ def get_label_region_min_max(label_img, label_value):
     assert len(label_img.shape) == 2
     lbl_rows, lbl_cols = np.nonzero(label_img == label_value)
     return ((min(lbl_rows), max(lbl_rows) + 1), (min(lbl_cols), max(lbl_cols) + 1))
+
+
+def hex_str_to_nparr(hex_str, arr_shape):
+    np_arr = np.array(bitarray.util.hex2ba(hex_str).tolist())
+    np_arr = np_arr[-(arr_shape[0]*arr_shape[1]):]
+    np_arr = np_arr.reshape(arr_shape)
+    return np_arr
