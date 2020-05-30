@@ -19,7 +19,8 @@ Start Django's development server:
 
 <!--
 TODO:
-- support 8-connected and disjoint symbols
+~ support 8-connected and disjoint symbols
+ * partially supported in transformations (hackish - only if there's a region in top-left corner)
 - allow whole area to select symbol (even gaps)
 - enlarge/pop-up symbols on hover
 - allow transforming to higher resolution symbols by upscaling whole image 
@@ -38,5 +39,6 @@ TODO:
 - include source images in repo
 - include full explanation/guide in readme
 - analyse source images for assumptions
+ - consider "Principles of grouping", "Gestalt psychology", "Visual design elements and principles"
 - add tests 
 -->

@@ -22,9 +22,9 @@ shape_transforms = [
     (7, 5, '1c9f27c9c', '000e03800'),
     (7, 5, '109f8fc84', '394a5294e'),
     (7, 5, '7e1084210', '119c2109f'),
-    # (7, 5, '709485e1c', '30422210e'),
+    (7, 5, '709485e1c', '30422210e'),
     (7, 5, '7e1f85e10', '30426084c'),
-    # (7, 5, '5e1c8721c', '08ca53c42'),
+    (7, 5, '5e1c8721c', '08ca53c42'),
 ]
 
 
@@ -167,24 +167,35 @@ def update_matching_shapes(col_img, lbl_img, before_shape, after_shape):
     after_col_img = np.stack((after_shape, after_shape, after_shape), axis=-1)
     after_col_img = 255 * np.invert(after_col_img).astype(np.uint8)
     for idx in labels:
-        lbl_shape = get_label_region(lbl_img[:, :, 0], idx)
+        lbl_shape = get_label_region(lbl_img[:, :, 0], idx, dim=before_shape.shape)
         if np.array_equal(lbl_shape > 0, before_shape):
-            sub_img = get_subregion_matching_label_region(col_img, lbl_img[:, :, 0], idx)
+            sub_img = get_subregion_matching_label_region(col_img, lbl_img[:, :, 0], idx, dim=before_shape.shape)
             sub_img[:] = after_col_img
             # im[np.nonzero(labelled == idx)] = lbl_img.astype(np.uint8).flatten()
             # im = np.where(labelled == i, [128, 0, 128], im).astype(np.uint8)
 
 
-def get_label_region(label_img, label_value):
+def get_label_region(label_img, label_value, dim=None):
     """
     Get smallest rectangular region including all labels of the given value in the given label image.
+
+    Optional dimensions can be provided, in which case the rectangle will be enlarged (or shrunk)
+    to match those dimensions by keeping the initial rectangle in the top-left corner.
     """
     assert len(label_img.shape) == 2
     sel_rows, sel_cols = np.nonzero(label_img == label_value)
-    return label_img[min(sel_rows):(max(sel_rows) + 1), min(sel_cols):(max(sel_cols) + 1)]
+    min_row = min(sel_rows)
+    max_row = max(sel_rows) + 1
+    min_col = min(sel_cols)
+    max_col = max(sel_cols) + 1
+    if dim is not None:
+        assert len(dim) == 2
+        max_row = min_row + dim[0]
+        max_col = min_col + dim[1]
+    return label_img[min_row:max_row, min_col:max_col]
 
 
-def get_subregion_matching_label_region(col_img, label_img, label_value):
+def get_subregion_matching_label_region(col_img, label_img, label_value, dim=None):
     """
     Get the subregion in the color image that corresponds with the smallest rectangle in the label image
     that contains all instances of the label values.
@@ -194,7 +205,15 @@ def get_subregion_matching_label_region(col_img, label_img, label_value):
     assert col_img.shape[0] == label_img.shape[0]
     assert col_img.shape[1] == label_img.shape[1]
     lbl_rows, lbl_cols = np.nonzero(label_img == label_value)
-    return col_img[min(lbl_rows):(max(lbl_rows) + 1), min(lbl_cols):(max(lbl_cols) + 1), :]
+    min_row = min(lbl_rows)
+    max_row = max(lbl_rows) + 1
+    min_col = min(lbl_cols)
+    max_col = max(lbl_cols) + 1
+    if dim is not None:
+        assert len(dim) == 2
+        max_row = min_row + dim[0]
+        max_col = min_col + dim[1]
+    return col_img[min_row:max_row, min_col:max_col, :]
 
 
 def get_label_region_min_max(label_img, label_value):
