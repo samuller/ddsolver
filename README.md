@@ -26,6 +26,7 @@ TODO:
 - allow transforming to higher resolution symbols by upscaling whole image 
   - keep aspect ratio
 - make transformnation rules visible in UI
+- increase peformance with lots of transforms
 - allow custom transformation rules
 - setup saving of transformation rules, notes and settings (localstorage/save file)
 - combine all pages into single image? (automatically)
