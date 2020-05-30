@@ -15,6 +15,23 @@ curr_scale = 4
 
 image_extensions = ['gif', 'jpg', 'png']
 
+before = """  ***
+  *  
+*****
+  *  
+*****
+  *  
+***  
+"""
+
+after = """     
+     
+ *** 
+     
+ *** 
+     
+     
+"""
 
 # Create your views here.
 def main_page(request):
@@ -88,6 +105,12 @@ def main_image(request):
         # Color selected area red
         im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
+    before_arr = np.array([list(line) for line in before.splitlines()])
+    before_arr = before_arr == '*'
+    after_arr = np.array([list(line) for line in after.splitlines()])
+    after_arr = after_arr == '*'
+    update_matching_shapes(im, labelled, before_arr, after_arr)
+
     # Resize image
     im = resize_larger(im, curr_scale)
     response = HttpResponse(content_type="image/png")
@@ -134,7 +157,52 @@ def resize_smaller(im, scale=2):
     return skimage.transform.downscale_local_mean(im, (scale, scale))
 
 
+def update_matching_shapes(col_img, lbl_img, before_shape, after_shape):
+    """
+    Update color image to replace shapes by matching them in the label image.
+    """
+    assert len(col_img.shape) == 3
+    assert col_img.shape == lbl_img.shape
+    assert before_shape.shape == after_shape.shape
+    assert before_shape.dtype == np.bool_
+    assert before_shape.dtype == after_shape.dtype
+
+    labels = np.unique(lbl_img)
+
+    after_col_img = np.stack((after_shape, after_shape, after_shape), axis=-1)
+    after_col_img = 255 * np.invert(after_col_img).astype(np.uint8)
+    for idx in labels:
+        lbl_shape = get_label_region(lbl_img[:, :, 0], idx)
+        if np.array_equal(lbl_shape > 0, before_shape):
+            sub_img = get_subregion_matching_label_region(col_img, lbl_img[:, :, 0], idx)
+            sub_img[:] = after_col_img
+            # im[np.nonzero(labelled == idx)] = lbl_img.astype(np.uint8).flatten()
+            # im = np.where(labelled == i, [128, 0, 128], im).astype(np.uint8)
+
+
 def get_label_region(label_img, label_value):
+    """
+    Get smallest rectangular region including all labels of the given value in the given label image.
+    """
     assert len(label_img.shape) == 2
     sel_rows, sel_cols = np.nonzero(label_img == label_value)
     return label_img[min(sel_rows):(max(sel_rows) + 1), min(sel_cols):(max(sel_cols) + 1)]
+
+
+def get_subregion_matching_label_region(col_img, label_img, label_value):
+    """
+    Get the subregion in the color image that corresponds with the smallest rectangle in the label image
+    that contains all instances of the label values.
+    """
+    assert len(col_img.shape) == 3
+    assert len(label_img.shape) == 2
+    assert col_img.shape[0] == label_img.shape[0]
+    assert col_img.shape[1] == label_img.shape[1]
+    lbl_rows, lbl_cols = np.nonzero(label_img == label_value)
+    return col_img[min(lbl_rows):(max(lbl_rows) + 1), min(lbl_cols):(max(lbl_cols) + 1), :]
+
+
+def get_label_region_min_max(label_img, label_value):
+    assert len(label_img.shape) == 2
+    lbl_rows, lbl_cols = np.nonzero(label_img == label_value)
+    return ((min(lbl_rows), max(lbl_rows) + 1), (min(lbl_cols), max(lbl_cols) + 1))
