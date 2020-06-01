@@ -63,7 +63,7 @@
     <img src="/image.png" class="main_img" ondragstart="return false;" ondrop="return false;">
     <div class="listbox sidepanel">
         {% if cached_regions is None %}
-        <span>Loading...</span>
+        <button onclick="location.reload(true);">Process</button>
         {% else %}
             {% for region in cached_regions  %}
             {% if forloop.counter0 < 10%}
