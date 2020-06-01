@@ -42,4 +42,12 @@ TODO:
 - analyse source images for assumptions
  - consider "Principles of grouping", "Gestalt psychology", "Visual design elements and principles"
 - add tests 
+
+load and cache image
+process image
+- extract and cache patterns
+ - list patterns on side
+- perform transformations
+ - allow switching between original and transformed image
+
 -->

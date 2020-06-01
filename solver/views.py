@@ -14,8 +14,9 @@ curr_dir = None
 curr_img = None
 curr_idx = 0
 curr_xy = None
-# Integer scaling only
-curr_scale = 4
+curr_scale = 4  # integer scaling only
+cached_img = None
+cached_regions = None
 
 
 shape_transforms = [
@@ -50,6 +51,7 @@ def main_page(request):
     if not is_empty_or_none(pathname):
         if pathname != curr_dir:
             curr_idx = 0
+            reset_image_cache()
         curr_dir = pathname
         if curr_dir[-1] is not '/':
             curr_dir += '/'
@@ -66,6 +68,7 @@ def main_page(request):
         else:
             curr_idx = 0
             curr_img = None
+            reset_image_cache()
 
     context = {'curr_dir': curr_dir, 'curr_img': curr_img,
                'curr_idx': curr_idx + 1, 'image_count': image_count,
@@ -74,9 +77,14 @@ def main_page(request):
 
 
 def main_image(request):
-    global curr_dir, curr_xy, curr_scale
+    global curr_dir, curr_img, cached_img, curr_xy, curr_scale, shape_transforms
     if is_empty_or_none(curr_dir) or is_empty_or_none(curr_img) or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
+    if cached_img is not None:
+        response = HttpResponse(content_type="image/png")
+        imageio.imwrite(response, cached_img[:, :, :], format="png")
+        return response
+
     # Load current image
     im = imageio.imread(curr_dir + curr_img)
 
@@ -122,6 +130,8 @@ def main_image(request):
 
     # Resize image
     im = resize_larger(im, curr_scale)
+    cached_img = im
+
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :, :], format="png")
     return response
@@ -131,6 +141,7 @@ def prev_image(request):
     global curr_idx, curr_xy
     curr_idx = curr_idx - 1
     curr_xy = None
+    reset_image_cache()
     return HttpResponseRedirect('/')
 
 
@@ -138,7 +149,15 @@ def next_image(request):
     global curr_idx, curr_xy
     curr_idx = curr_idx + 1
     curr_xy = None
+    reset_image_cache()
     return HttpResponseRedirect('/')
+
+
+def reset_image_cache():
+    global cached_img
+    cached_img = None
+    cached_regions = None
+    pass
 
 
 def select_xy(request):
