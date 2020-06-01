@@ -91,15 +91,22 @@ function api_select_xy(x_pos, y_pos, onsuccess = (data) => {}) {
 }
 
 function selectMode(event) {
-    mode = event.value;
-    imgElem = $('.main_img')[0];
-    reloadImage(imgElem, mode);
+    $.ajax({url : "/set_mode", type: "GET",
+        data : {mode: event.value},
+        success: function(data, textStatus, jqXHR) {
+            let imgElem = $('.main_img')[0];
+            reloadImage(imgElem);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.log(`${textStatus}: ${errorThrown} (${jqXHR.status})`);
+        }
+    });
 }
 
-function reloadImage(imgElem, mode="original") {
+function reloadImage(imgElem) {
     // reload image on success
     let imgUrl = imgElem.src.split('?')[0];
-    imgElem.src = imgUrl + "?mode=" + mode + "&random=" + (new Date().getTime());
+    imgElem.src = `${imgUrl}?random=${new Date().getTime()}`;
 }
 
 $(".main_img").click ( function (evt) {

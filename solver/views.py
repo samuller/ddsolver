@@ -82,9 +82,6 @@ def main_image(request):
     global curr_dir, curr_img, cache_loaded_img, cache_processed_img, cached_regions
     global curr_mode, curr_xy, curr_scale, shape_transforms
 
-    if request.method == 'GET':
-        curr_mode = request.GET.get('mode')
-
     if is_empty_or_none(curr_dir) or is_empty_or_none(curr_img) or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
 
@@ -92,8 +89,7 @@ def main_image(request):
         response = HttpResponse(content_type="image/png")
         imageio.imwrite(response, cache_processed_img[:, :, :], format="png")
         return response
-    # Regardless of current mode
-    if cache_loaded_img is not None:
+    elif curr_mode == 'original' and cache_loaded_img is not None:
         response = HttpResponse(content_type="image/png")
         imageio.imwrite(response, cache_loaded_img[:, :, :], format="png")
         return response
@@ -191,10 +187,12 @@ def next_image(request):
     return HttpResponseRedirect('/')
 
 
-def reset_image_cache():
+def reset_image_cache(processed_only=False):
     global cache_loaded_img, cache_processed_img, cached_regions
-    cache_loaded_img = None
     cache_processed_img = None
+    if processed_only:
+        return
+    cache_loaded_img = None
     cached_regions = None
 
 
@@ -205,7 +203,15 @@ def select_xy(request):
         y_pos = int(request.POST.get('y'))
         # Assume integer up-scaling only
         curr_xy = (int(x_pos / curr_scale), int(y_pos / curr_scale))
-    return HttpResponseRedirect('/')
+        reset_image_cache(True)
+    return HttpResponse('')
+
+
+def set_mode(request):
+    global curr_mode
+    if request.method == 'GET':
+        curr_mode = request.GET.get('mode')
+    return HttpResponse('')
 
 
 def is_empty_or_none(str_value):

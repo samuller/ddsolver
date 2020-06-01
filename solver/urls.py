@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^next_img$', views.next_image, name='next'),
     url(r'^prev_img$', views.prev_image, name='prev'),
     url(r'^select_xy', views.select_xy, name='select_xy'),
+    url(r'^set_mode', views.set_mode, name='set_mode'),
 ]
