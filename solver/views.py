@@ -7,7 +7,9 @@ import numpy as np
 from scipy.ndimage import label
 import bitarray, bitarray.util
 
-
+# Constants
+image_extensions = ['gif', 'jpg', 'png']
+# Globals
 curr_dir = None
 curr_img = None
 curr_idx = 0
@@ -15,7 +17,6 @@ curr_xy = None
 # Integer scaling only
 curr_scale = 4
 
-image_extensions = ['gif', 'jpg', 'png']
 
 shape_transforms = [
     # rows, cols, before, after
