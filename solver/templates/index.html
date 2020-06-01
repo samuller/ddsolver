@@ -48,6 +48,11 @@
     <button onclick="location.href='/next_img'" type="button">
          Next
     </button>
+    <label for="path_name">Mode: </label>
+    <select onChange="selectMode(this);">
+        <option selected value="original">Original</option>
+        <option value="transform">Transformed</option>
+    </select>
     <!--
     <label for="path_name">Scale: </label>
     <input type="number" step="1" value="{{ curr_scale }}">
@@ -85,10 +90,16 @@ function api_select_xy(x_pos, y_pos, onsuccess = (data) => {}) {
     });
 }
 
-function reloadImage(imgElem) {
+function selectMode(event) {
+    mode = event.value;
+    imgElem = $('.main_img')[0];
+    reloadImage(imgElem, mode);
+}
+
+function reloadImage(imgElem, mode="original") {
     // reload image on success
     let imgUrl = imgElem.src.split('?')[0];
-    imgElem.src = imgUrl + "?random=" + (new Date().getTime());
+    imgElem.src = imgUrl + "?mode=" + mode + "&random=" + (new Date().getTime());
 }
 
 $(".main_img").click ( function (evt) {

@@ -14,8 +14,10 @@ curr_dir = None
 curr_img = None
 curr_idx = 0
 curr_xy = None
+curr_mode = 'original'
 curr_scale = 4  # integer scaling only
-cached_img = None
+cache_loaded_img = None
+cache_processed_img = None
 cached_regions = None
 
 
@@ -77,12 +79,23 @@ def main_page(request):
 
 
 def main_image(request):
-    global curr_dir, curr_img, cached_img, cached_regions, curr_xy, curr_scale, shape_transforms
+    global curr_dir, curr_img, cache_loaded_img, cache_processed_img, cached_regions
+    global curr_mode, curr_xy, curr_scale, shape_transforms
+
+    if request.method == 'GET':
+        curr_mode = request.GET.get('mode')
+
     if is_empty_or_none(curr_dir) or is_empty_or_none(curr_img) or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
-    if cached_img is not None:
+
+    if curr_mode == 'transform' and cache_processed_img is not None:
         response = HttpResponse(content_type="image/png")
-        imageio.imwrite(response, cached_img[:, :, :], format="png")
+        imageio.imwrite(response, cache_processed_img[:, :, :], format="png")
+        return response
+    # Regardless of current mode
+    if cache_loaded_img is not None:
+        response = HttpResponse(content_type="image/png")
+        imageio.imwrite(response, cache_loaded_img[:, :, :], format="png")
         return response
 
     # Load current image
@@ -109,6 +122,7 @@ def main_image(request):
     #     color = [int(random.random() * 255), int(random.random() * 255), int(random.random() * 255)]
     #     im = np.where(labelled == i, color, im).astype(np.uint8)
 
+    # Cache regions of specific size
     cached_regions = []
     for idx in range(region_count):
         sel_img = get_label_region(labelled[:, :, 0], idx)
@@ -129,6 +143,7 @@ def main_image(request):
         # Color selected area red
         im = np.where(labelled == selected_label, [255, 0, 0], im).astype(np.uint8)
 
+    cache_loaded_img = resize_larger(np.copy(im), curr_scale)
     for transform in shape_transforms:
         tr_rows, tr_cols, tr_before, tr_after = transform
         before_arr = hex_str_to_nparr(tr_before, (tr_rows, tr_cols))
@@ -137,7 +152,7 @@ def main_image(request):
 
     # Resize image
     im = resize_larger(im, curr_scale)
-    cached_img = im
+    cache_processed_img = im
 
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :, :], format="png")
@@ -173,10 +188,10 @@ def next_image(request):
 
 
 def reset_image_cache():
-    global cached_img
-    cached_img = None
+    global cache_loaded_img, cache_processed_img, cached_regions
+    cache_loaded_img = None
+    cache_processed_img = None
     cached_regions = None
-    pass
 
 
 def select_xy(request):
