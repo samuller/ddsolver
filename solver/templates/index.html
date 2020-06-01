@@ -8,7 +8,25 @@
   <meta name="author" content="">
   <style>
   .main_img {
+      align-self: flex-start;
       width:50%
+  }
+
+  .listbox {
+      display: flex;
+      border: 1px solid gray;
+      padding: 0.5em;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+  }
+
+  .listbox img {
+      margin:5px 0;
+  }
+
+  .sidepanel {
+      overflow-y: scroll;
   }
 
   @media screen and (max-width: 750px) {
@@ -36,11 +54,23 @@
     -->
 </form>
 
-<img src="/image.png" class="main_img" ondragstart="return false;" ondrop="return false;" style="width:100%">
+<div style="display: flex; align-items: flex-start; overflow: hidden;">
+    <img src="/image.png" class="main_img" ondragstart="return false;" ondrop="return false;">
+    <div class="listbox sidepanel">
+        {% if cached_regions is None %}
+        <span>Loading...</span>
+        {% else %}
+            {% for region in cached_regions  %}
+            {% if forloop.counter0 < 10%}
+            <img src="/pattern{{ forloop.counter0 }}.png">
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
 
 <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
 <script>
-
 function api_select_xy(x_pos, y_pos, onsuccess = (data) => {}) {
     $.ajax({
         url : "/select_xy",

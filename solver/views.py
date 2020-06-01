@@ -72,12 +72,12 @@ def main_page(request):
 
     context = {'curr_dir': curr_dir, 'curr_img': curr_img,
                'curr_idx': curr_idx + 1, 'image_count': image_count,
-               'curr_scale': curr_scale}
+               'curr_scale': curr_scale, 'cached_regions': cached_regions}
     return render(request, 'index.html', context)
 
 
 def main_image(request):
-    global curr_dir, curr_img, cached_img, curr_xy, curr_scale, shape_transforms
+    global curr_dir, curr_img, cached_img, cached_regions, curr_xy, curr_scale, shape_transforms
     if is_empty_or_none(curr_dir) or is_empty_or_none(curr_img) or not os.path.exists(curr_dir + curr_img):
         return HttpResponse('')
     if cached_img is not None:
@@ -109,6 +109,13 @@ def main_image(request):
     #     color = [int(random.random() * 255), int(random.random() * 255), int(random.random() * 255)]
     #     im = np.where(labelled == i, color, im).astype(np.uint8)
 
+    cached_regions = []
+    for idx in range(region_count):
+        sel_img = get_label_region(labelled[:, :, 0], idx)
+        sel_img = (sel_img == idx).astype(np.uint8)
+        if sel_img.shape == (7,5):
+            cached_regions.append(sel_img)
+
     # Color selected area and similar areas
     if curr_xy is not None:
         row, col = curr_xy
@@ -134,6 +141,18 @@ def main_image(request):
 
     response = HttpResponse(content_type="image/png")
     imageio.imwrite(response, im[:, :, :], format="png")
+    return response
+
+
+def pattern_img(request, idx):
+    if cached_regions is None:
+        im = np.array([[255, 0], [0, 255]])
+    else:
+        im = cached_regions[int(idx)]
+        im = np.invert(255*im)
+    im = resize_larger(im, 4)
+    response = HttpResponse(content_type="image/png")
+    imageio.imwrite(response, im[:, :], format="png")
     return response
 
 
