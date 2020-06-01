@@ -124,11 +124,15 @@ def main_image(request):
 
     # Cache regions of specific size
     cached_regions = []
+    unique_region = set()
     for idx in range(region_count):
         sel_img = get_label_region(labelled[:, :, 0], idx)
-        sel_img = (sel_img == idx).astype(np.uint8)
-        if sel_img.shape == (7,5):
+        sel_img = (sel_img == idx)
+        hex_str = nparr_to_hex_str(sel_img)
+        sel_img = sel_img.astype(np.uint8)
+        if sel_img.shape == (7,5) and hex_str not in unique_region:
             cached_regions.append(sel_img)
+            unique_region.add(hex_str)
 
     # Color selected area and similar areas
     if curr_xy is not None:
@@ -291,6 +295,19 @@ def get_label_region_min_max(label_img, label_value):
 
 def hex_str_to_nparr(hex_str, arr_shape):
     np_arr = np.array(bitarray.util.hex2ba(hex_str).tolist())
+    # Hex string always translates to multiples of 4 bits. We therefore need to ignore the first few
+    # zeros for shapes whose length is not a multiple of 4.
     np_arr = np_arr[-(arr_shape[0]*arr_shape[1]):]
     np_arr = np_arr.reshape(arr_shape)
     return np_arr
+
+
+def nparr_to_hex_str(nparr):
+    assert nparr.dtype == np.bool_
+    # Convert boolean values to strings of either zero or one
+    ba = nparr.astype(np.uint8).astype(str)
+    # Convert numpy array of strings to single string
+    ba = "".join(ba.flatten().tolist())
+    # Prepend string with zeros to make it's length a multiple of 4 before creating the bitarray
+    ba = bitarray.bitarray('0'*(4 - len(ba)%4) + ba)
+    return bitarray.util.ba2hex(ba)
